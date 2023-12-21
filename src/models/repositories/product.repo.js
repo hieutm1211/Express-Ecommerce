@@ -3,7 +3,12 @@ const {
 } = require("mongoose")
 const {
   product
-} = require("../product.model")
+} = require("../product.model");
+const {
+  getSelectedData,
+  unSelectedData,
+  convertToObjectIdMongodb
+} = require("../../utils");
 
 const findAllDraftsForShop = async ({
   query,
@@ -93,6 +98,47 @@ const unPublishProductByShop = async ({
   return modifiedCount;
 }
 
+const findAllProducts = async ({
+  limit,
+  sort,
+  page,
+  filter,
+  select
+}) => {
+  const skip = (page - 1) * limit;
+  const sortBy = sort === 'ctime' ? {
+    _id: -1
+  } : {
+    id: 1
+  };
+  const products = await product.find(filter)
+    .sort(sortBy)
+    .skip(skip)
+    .limit(limit)
+    .select(getSelectedData(select))
+    .lean();
+
+  return products;
+}
+
+const findProduct = async ({
+  product_id,
+  unSelect
+}) => {
+  return await product.findById(product_id).select(unSelectedData(unSelect));
+}
+
+const updateProductById = async ({
+  productId,
+  bodyUpdate,
+  model,
+  isNew = true
+}) => {
+  return await model.findByIdAndUpdate(productId, bodyUpdate, {
+    new: isNew
+  })
+}
+
 const queryProduct = async ({
   query,
   limit,
@@ -109,10 +155,35 @@ const queryProduct = async ({
     .exec()
 }
 
+const getProductById = async (productId) => {
+  return await product.findOne({
+    _id: convertToObjectIdMongodb(productId)
+  }).lean();
+}
+
+const checkProductByServer = async (products) => {
+  return await Promise.all( products.map( async (product) => {
+    const foundProduct = await getProductById(product.productId);
+
+    if(foundProduct){
+      return {
+        price: foundProduct.product_price,
+        quantity: product.quantity,
+        productId: product.productId
+      }
+    }
+  }))
+}
+
 module.exports = {
   findAllDraftsForShop,
   findAllPublishesForShop,
   publishProductByShop,
   unPublishProductByShop,
-  searchProductByUser
+  searchProductByUser,
+  findAllProducts,
+  findProduct,
+  updateProductById,
+  getProductById,
+  checkProductByServer
 }
