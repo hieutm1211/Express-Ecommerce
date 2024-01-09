@@ -17,6 +17,11 @@ app.use(express.urlencoded({
   extended: true,
 }));
 
+// require('../test/inventory.test');
+// const productTest = require('../test/product.test');
+
+// productTest.purchaseProduct('product:001', 10);
+
 require('./dbs/init.mongodb');
 
 app.use('', require('./routes'));

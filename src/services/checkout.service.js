@@ -3,7 +3,7 @@ const { order } = require("../models/order.model");
 const { findCartById } = require("../models/repositories/cart.repo");
 const { checkProductByServer } = require("../models/repositories/product.repo");
 const { getDiscountAmount } = require("./discount.service");
-const { acquireLock } = require("./redis.service");
+// const { acquireLock } = require("./redis.service");
 
 class CheckoutService {
   static async checkoutReview({ cartId, userId, shop_order_ids = []}){
